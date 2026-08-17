@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Date Expander options</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6b6b70;
+    --line: #d8d8dc;
+    --field: #ffffff;
+    --accent: #1a63d8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e20;
+      --fg: #ececed;
+      --muted: #9a9aa0;
+      --line: #3a3a3e;
+      --field: #2a2a2d;
+      --accent: #6ea8ff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 20px;
+    min-width: 560px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 13px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  h1 { margin: 0 0 4px; font-size: 16px; }
+  .lede { margin: 0 0 16px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0 8px 6px 0;
+  }
+  td { padding: 0 8px 8px 0; vertical-align: middle; }
+  td:last-child, th:last-child { padding-right: 0; width: 28px; }
+  input[type=text] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    background: var(--field);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font: inherit;
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .preview { color: var(--muted); white-space: nowrap; }
+  .remove {
+    width: 28px; height: 28px; line-height: 1;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .remove:hover { color: #d23; border-color: #d23; }
+  .actions { display: flex; gap: 8px; margin-top: 4px; }
+  button {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    cursor: pointer;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #status { min-height: 18px; margin: 12px 0 0; color: var(--muted); }
+  #status.error { color: #d23; }
+  #status.ok { color: #1a8a3a; }
+  details { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; color: var(--muted); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 10px 0 0; }
+  dt { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  dd { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+  <h1>Date Expander</h1>
+  <p class="lede">Type a trigger in any textarea or rich-text field and it expands to the formatted stamp.</p>
+
+  <table>
+    <thead>
+      <tr><th>Trigger</th><th>Format</th><th>Preview</th><th></th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="actions">
+    <button id="add" type="button">Add rule</button>
+    <button id="save" type="button" class="primary">Save</button>
+    <button id="reset" type="button">Restore defaults</button>
+  </div>
+
+  <p id="status" role="status"></p>
+
+  <details>
+    <summary>Format tokens</summary>
+    <dl>
+      <dt>YYYY</dt><dd>4-digit year</dd>
+      <dt>YY</dt><dd>2-digit year</dd>
+      <dt>MM</dt><dd>month, 01–12</dd>
+      <dt>DD</dt><dd>day, 01–31</dd>
+      <dt>HH</dt><dd>hour, 00–23</dd>
+      <dt>hh</dt><dd>hour, 01–12</dd>
+      <dt>mm</dt><dd>minute, 00–59</dd>
+      <dt>ss</dt><dd>second, 00–59</dd>
+      <dt>A</dt><dd>AM or PM</dd>
+      <dt>\x</dt><dd>literal x — use it when your text contains a token, e.g. <span class="mono">co\m\ment</span></dd>
+    </dl>
+  </details>
+
+  <script src="format.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

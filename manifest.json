@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Date Expander",
+  "version": "1.1.0",
+  "description": "Expands a configurable trigger sequence into a formatted date/time stamp.",
+  "permissions": ["storage"],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["format.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ]
+}
