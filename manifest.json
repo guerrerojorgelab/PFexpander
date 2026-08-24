@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Date Expander",
-  "version": "1.1.0",
-  "description": "Expands a configurable trigger sequence into a formatted date/time stamp.",
+  "name": "PF Expander",
+  "version": "1.4.0",
+  "description": "Expands configurable triggers into plain text, Unicode characters, or date/time stamps.",
   "permissions": ["storage"],
   "options_ui": {
     "page": "options.html",
@@ -12,9 +12,10 @@
     {
       "matches": ["<all_urls>"],
       "js": ["format.js", "content.js"],
-      "run_at": "document_idle",
+      "run_at": "document_start",
       "all_frames": true,
-      "match_about_blank": true
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
     }
   ]
 }

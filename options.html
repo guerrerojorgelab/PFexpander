@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Date Expander options</title>
+<title>PF Expander options</title>
 <style>
   :root {
     color-scheme: light dark;
@@ -26,7 +26,7 @@
   body {
     margin: 0;
     padding: 20px;
-    min-width: 560px;
+    min-width: 760px;
     background: var(--bg);
     color: var(--fg);
     font: 13px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
@@ -45,7 +45,7 @@
   }
   td { padding: 0 8px 8px 0; vertical-align: middle; }
   td:last-child, th:last-child { padding-right: 0; width: 28px; }
-  input[type=text] {
+  input[type=text], textarea, select {
     width: 100%;
     box-sizing: border-box;
     padding: 6px 8px;
@@ -55,9 +55,20 @@
     border-radius: 6px;
     font: inherit;
   }
-  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  textarea { min-height: 32px; resize: vertical; }
+  input[type=text]:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .preview { color: var(--muted); white-space: nowrap; }
+  .mode { min-width: 110px; }
+  .output { min-width: 230px; }
+  .preview {
+    max-width: 240px;
+    color: var(--muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
   .remove {
     width: 28px; height: 28px; line-height: 1;
     border: 1px solid var(--line); border-radius: 6px;
@@ -86,12 +97,12 @@
 </style>
 </head>
 <body>
-  <h1>Date Expander</h1>
-  <p class="lede">Type a trigger in any textarea or rich-text field and it expands to the formatted stamp.</p>
+  <h1>PF Expander</h1>
+  <p class="lede">Expand a trigger into exact text, Unicode characters, or a formatted date and time.</p>
 
   <table>
     <thead>
-      <tr><th>Trigger</th><th>Format</th><th>Preview</th><th></th></tr>
+      <tr><th>Trigger</th><th>Type</th><th>Output</th><th>Preview</th><th></th></tr>
     </thead>
     <tbody id="rows"></tbody>
   </table>
@@ -105,7 +116,8 @@
   <p id="status" role="status"></p>
 
   <details>
-    <summary>Format tokens</summary>
+    <summary>Date and time tokens</summary>
+    <p>Tokens apply only to rules whose type is <strong>Date/time</strong>. Plain-text output preserves every character.</p>
     <dl>
       <dt>YYYY</dt><dd>4-digit year</dd>
       <dt>YY</dt><dd>2-digit year</dd>
