@@ -1,5 +1,7 @@
 # PF Expander
 
+**FP means Fill in Procedure**
+
 Typing `:fecha` inserts the current local date and time, formatted `[YYYY-MM-DD HH:mm]`. Typing `:pass` inserts `✅`, and typing `:fail` inserts `❌`.
 
 The extension supports single-line inputs, textareas, contenteditable editors, Google Sheets, Google Docs, and Google Slides. Plain-text rules preserve Unicode, punctuation, whitespace, line breaks, and date-like text exactly.
