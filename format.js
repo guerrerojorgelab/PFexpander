@@ -2,7 +2,7 @@
 // options GUI is produced by the same code that does the real expansion.
 
 (function (root) {
-  const RULES_SCHEMA_VERSION = 4;
+  const RULES_SCHEMA_VERSION = 6;
   const LEGACY_CHECK_MARK_RULE = {
     trigger: ':white_check_mark:',
     mode: 'text',
@@ -10,6 +10,8 @@
   };
   const PASS_RULE = { trigger: ':pass', mode: 'text', output: '✅' };
   const FAIL_RULE = { trigger: ':fail', mode: 'text', output: '❌' };
+  const EASTER_EGG_RULE = { trigger: ':polla', mode: 'text', output: '8====D' };
+  const HIDDEN_RULES = [EASTER_EGG_RULE];
   const DEFAULT_RULES = [
     { trigger: ':fecha', mode: 'date', output: '[YYYY-MM-DD HH:mm]' },
     PASS_RULE,
@@ -71,6 +73,8 @@
 
   // Version 2 separates literal text from date templates. Version 3 renames the
   // date trigger. Version 4 renames the pass trigger and adds the fail trigger.
+  // Version 5 added the Easter egg to saved rules. Version 6 reserves it as a
+  // hidden built-in rule and removes the visible saved copy.
   function migrateRules(storedRules, storedVersion) {
     const version = Number.isInteger(storedVersion) ? storedVersion : 0;
     const hasStoredRules = Array.isArray(storedRules);
@@ -120,6 +124,13 @@
       }
     }
 
+    const visibleEasterEgg = rules.findIndex(rule =>
+      rule.trigger === EASTER_EGG_RULE.trigger);
+    if (visibleEasterEgg !== -1) {
+      rules.splice(visibleEasterEgg, 1);
+      changed = true;
+    }
+
     return { rules, changed, version: RULES_SCHEMA_VERSION };
   }
 
@@ -165,6 +176,8 @@
     RULES_SCHEMA_VERSION,
     PASS_RULE,
     FAIL_RULE,
+    EASTER_EGG_RULE,
+    HIDDEN_RULES,
     DEFAULT_RULES,
     TOKENS,
     formatDate,

@@ -1,5 +1,6 @@
 const {
   DEFAULT_RULES,
+  HIDDEN_RULES,
   RULES_SCHEMA_VERSION,
   expandRule,
   findEndingMatch,
@@ -7,18 +8,27 @@ const {
   normalizeRules
 } = globalThis.DateExpander;
 
+function activeRules(configuredRules) {
+  const hiddenTriggers = new Set(HIDDEN_RULES.map(rule => rule.trigger));
+  return [
+    ...normalizeRules(configuredRules)
+      .filter(rule => !hiddenTriggers.has(rule.trigger)),
+    ...HIDDEN_RULES
+  ];
+}
+
 // Storage reads are async but the input handler is not, so the rules are cached
 // here. Without the onChanged listener below, an options change would not take
 // effect until every open tab was reloaded.
-let rules = DEFAULT_RULES;
+let rules = activeRules(DEFAULT_RULES);
 
 chrome.storage.sync.get({ rules: null, rulesSchemaVersion: 0 }, stored => {
   const migration = migrateRules(stored.rules, stored.rulesSchemaVersion);
-  rules = migration.rules;
+  rules = activeRules(migration.rules);
 
   if (migration.changed) {
     chrome.storage.sync.set({
-      rules,
+      rules: migration.rules,
       rulesSchemaVersion: RULES_SCHEMA_VERSION
     });
   }
@@ -26,7 +36,7 @@ chrome.storage.sync.get({ rules: null, rulesSchemaVersion: 0 }, stored => {
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.rules && Array.isArray(changes.rules.newValue)) {
-    rules = normalizeRules(changes.rules.newValue);
+    rules = activeRules(changes.rules.newValue);
   }
 });
 
@@ -393,6 +403,7 @@ function dispatchGoogleKeyboardEvent(target, type, init) {
     view,
     key: init.key,
     code: init.code || '',
+    shiftKey: Boolean(init.shiftKey),
     keyCode,
     which: keyCode,
     charCode: init.charCode ?? keyCode
@@ -414,11 +425,92 @@ function dispatchGoogleKeyboardEvent(target, type, init) {
   target.dispatchEvent(event);
 }
 
-function keyCodeForCharacter(character) {
-  if (/^[a-z]$/i.test(character)) return character.toUpperCase().charCodeAt(0);
-  if (/^[0-9]$/.test(character)) return character.charCodeAt(0);
-  if (character === ' ') return 32;
-  return character.codePointAt(0);
+const SYMBOL_KEYS = {
+  '!': ['Digit1', 49, true],
+  '@': ['Digit2', 50, true],
+  '#': ['Digit3', 51, true],
+  '$': ['Digit4', 52, true],
+  '%': ['Digit5', 53, true],
+  '^': ['Digit6', 54, true],
+  '&': ['Digit7', 55, true],
+  '*': ['Digit8', 56, true],
+  '(': ['Digit9', 57, true],
+  ')': ['Digit0', 48, true],
+  '-': ['Minus', 189, false],
+  '_': ['Minus', 189, true],
+  '=': ['Equal', 187, false],
+  '+': ['Equal', 187, true],
+  '[': ['BracketLeft', 219, false],
+  '{': ['BracketLeft', 219, true],
+  ']': ['BracketRight', 221, false],
+  '}': ['BracketRight', 221, true],
+  '\\': ['Backslash', 220, false],
+  '|': ['Backslash', 220, true],
+  ';': ['Semicolon', 186, false],
+  ':': ['Semicolon', 186, true],
+  "'": ['Quote', 222, false],
+  '"': ['Quote', 222, true],
+  ',': ['Comma', 188, false],
+  '<': ['Comma', 188, true],
+  '.': ['Period', 190, false],
+  '>': ['Period', 190, true],
+  '/': ['Slash', 191, false],
+  '?': ['Slash', 191, true],
+  '`': ['Backquote', 192, false],
+  '~': ['Backquote', 192, true],
+  ' ': ['Space', 32, false]
+};
+
+function physicalKeyForCharacter(character) {
+  if (/^[a-z]$/i.test(character)) {
+    return {
+      code: `Key${character.toUpperCase()}`,
+      keyCode: character.toUpperCase().charCodeAt(0),
+      shiftKey: character === character.toUpperCase()
+    };
+  }
+
+  if (/^[0-9]$/.test(character)) {
+    return { code: `Digit${character}`, keyCode: character.charCodeAt(0), shiftKey: false };
+  }
+
+  const symbol = SYMBOL_KEYS[character];
+  return symbol
+    ? { code: symbol[0], keyCode: symbol[1], shiftKey: symbol[2] }
+    : null;
+}
+
+function dispatchGoogleTextCharacter(target, character) {
+  const physicalKey = physicalKeyForCharacter(character);
+  const charCode = character.codePointAt(0);
+
+  if (physicalKey) {
+    dispatchGoogleKeyboardEvent(target, 'keydown', {
+      key: character,
+      code: physicalKey.code,
+      keyCode: physicalKey.keyCode,
+      charCode: 0,
+      shiftKey: physicalKey.shiftKey
+    });
+  }
+
+  dispatchGoogleKeyboardEvent(target, 'keypress', {
+    key: character,
+    code: physicalKey?.code || '',
+    keyCode: charCode,
+    charCode,
+    shiftKey: physicalKey?.shiftKey || false
+  });
+
+  if (physicalKey) {
+    dispatchGoogleKeyboardEvent(target, 'keyup', {
+      key: character,
+      code: physicalKey.code,
+      keyCode: physicalKey.keyCode,
+      charCode: 0,
+      shiftKey: physicalKey.shiftKey
+    });
+  }
 }
 
 // Slides routes text through key events instead of a mutable DOM value. Use the
@@ -428,6 +520,12 @@ function keyCodeForCharacter(character) {
 async function replaceThroughGoogleKeyboard(target, triggerLength, stamp) {
   for (let index = 0; index < triggerLength; index += 1) {
     dispatchGoogleKeyboardEvent(target, 'keydown', {
+      key: 'Backspace',
+      code: 'Backspace',
+      keyCode: 8,
+      charCode: 0
+    });
+    dispatchGoogleKeyboardEvent(target, 'keyup', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 8,
@@ -445,13 +543,14 @@ async function replaceThroughGoogleKeyboard(target, triggerLength, stamp) {
         keyCode: 13,
         charCode: 13
       });
-    } else {
-      const keyCode = keyCodeForCharacter(character);
-      dispatchGoogleKeyboardEvent(target, 'keypress', {
-        key: character,
-        keyCode,
-        charCode: keyCode
+      dispatchGoogleKeyboardEvent(target, 'keyup', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        charCode: 0
       });
+    } else {
+      dispatchGoogleTextCharacter(target, character);
     }
     await paceKeystrokes();
   }
