@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PF Expander",
-  "version": "1.4.0",
-  "description": "Expands configurable triggers into plain text, Unicode characters, or date/time stamps.",
+  "version": "1.5.0",
+  "description": "Expands configurable triggers in place into plain text, Unicode characters, or date/time stamps.",
   "permissions": ["storage"],
   "options_ui": {
     "page": "options.html",

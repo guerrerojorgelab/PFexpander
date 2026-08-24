@@ -40,7 +40,7 @@ node tests/browser-smoke.mjs
 - **Plain text is literal.** Select **Plain text** to prevent date-token processing in the output.
 - **Date and time output expands tokens.** Select **Date/time** when the output uses tokens such as `YYYY`, `MM`, or `HH`.
 - **Google editors use a typing buffer.** This supports editor surfaces that keep document text outside the event target.
-- **Google Slides uses its text-event iframe.** The extension sends replacement keystrokes through the active Slides textbox.
+- **Google Slides uses its text-event iframe.** The extension sends replacement keystrokes through the active Slides textbox. The whole sequence runs in one task, so the editor paints the finished text once instead of showing the trigger being deleted character by character. To slow it down, raise `KEY_DELAY_MS` in `content.js`.
 - **Chrome internal pages are excluded.** Chrome does not allow extensions to run on pages such as `chrome://extensions` or the Chrome Web Store.
 
 ## Narrowing the scope

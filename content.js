@@ -372,6 +372,17 @@ function wait(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+// Zero holds the whole backspace-then-type sequence inside one task, so the
+// browser paints the finished text once instead of animating the trigger away
+// one character at a time. Any value above zero yields to the event loop
+// between keystrokes and brings that visible typing back; raise it only if an
+// editor turns out to drop keys delivered this fast.
+const KEY_DELAY_MS = 0;
+
+async function paceKeystrokes() {
+  if (KEY_DELAY_MS > 0) await wait(KEY_DELAY_MS);
+}
+
 function dispatchGoogleKeyboardEvent(target, type, init) {
   const view = target.ownerDocument.defaultView;
   const keyCode = init.keyCode || 0;
@@ -412,6 +423,8 @@ function keyCodeForCharacter(character) {
 
 // Slides routes text through key events instead of a mutable DOM value. Use the
 // iframe's own KeyboardEvent constructor so its event router accepts the input.
+// Slides handles each event synchronously, so at the default pacing the entire
+// sequence lands before the editor yields and the user sees only the result.
 async function replaceThroughGoogleKeyboard(target, triggerLength, stamp) {
   for (let index = 0; index < triggerLength; index += 1) {
     dispatchGoogleKeyboardEvent(target, 'keydown', {
@@ -420,7 +433,7 @@ async function replaceThroughGoogleKeyboard(target, triggerLength, stamp) {
       keyCode: 8,
       charCode: 0
     });
-    await wait(30);
+    await paceKeystrokes();
   }
 
   const output = String(stamp).replace(/\r\n?/g, '\n');
@@ -440,7 +453,7 @@ async function replaceThroughGoogleKeyboard(target, triggerLength, stamp) {
         charCode: keyCode
       });
     }
-    await wait(30);
+    await paceKeystrokes();
   }
 
   return true;
